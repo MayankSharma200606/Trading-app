@@ -1,1 +1,70 @@
-{"cells":[{"cell_type":"code","source":"import streamlit as st\nimport pandas as pd\nimport plotly.graph_objects as go\n\nst.set_page_config(layout=\"wide\")\n\nif 'data' not in st.session_state:\n    st.error(\"Data not loaded. Please go back to the main app page.\")\n    st.stop()\n\ndata = st.session_state.data.copy() # Use a copy to add indicators\n\n# --- PAGE TITLE & HEADER ---\nst.title(\"Advanced Charting\")\nst.markdown(\"Analyze SIMULATED_STOCK with technical indicators.\")\n\n# --- SIDEBAR FOR INDICATOR CONTROLS ---\nst.sidebar.header(\"Indicator Settings\")\nshow_sma = st.sidebar.checkbox(\"Show Simple Moving Average (SMA)\", True)\nif show_sma:\n    sma_short_window = st.sidebar.slider(\"SMA Short Window\", 5, 50, 10)\n    sma_long_window = st.sidebar.slider(\"SMA Long Window\", 10, 100, 30)\n\nshow_ema = st.sidebar.checkbox(\"Show Exponential Moving Average (EMA)\")\nif show_ema:\n    ema_window = st.sidebar.slider(\"EMA Window\", 5, 50, 12)\n\n# --- CALCULATE INDICATORS ---\nif show_sma:\n    data[f'SMA_{sma_short_window}'] = data['Close'].rolling(window=sma_short_window).mean()\n    data[f'SMA_{sma_long_window}'] = data['Close'].rolling(window=sma_long_window).mean()\n\nif show_ema:\n    data[f'EMA_{ema_window}'] = data['Close'].ewm(span=ema_window, adjust=False).mean()\n\n\n# --- PLOT THE CHART ---\nfig = go.Figure()\n\n# Add Candlestick trace\nfig.add_trace(go.Candlestick(x=data.index,\n                             open=data['Open'],\n                             high=data['High'],\n                             low=data['Low'],\n                             close=data['Close'],\n                             name=\"Price\"))\n\n# Add SMA traces if selected\nif show_sma:\n    fig.add_trace(go.Scatter(x=data.index, y=data[f'SMA_{sma_short_window}'],\n                             line=dict(color='orange', width=1), name=f'SMA {sma_short_window}'))\n    fig.add_trace(go.Scatter(x=data.index, y=data[f'SMA_{sma_long_window}'],\n                             line=dict(color='cyan', width=1), name=f'SMA {sma_long_window}'))\n\n# Add EMA trace if selected\nif show_ema:\n    fig.add_trace(go.Scatter(x=data.index, y=data[f'EMA_{ema_window}'],\n                             line=dict(color='yellow', width=1), name=f'EMA {ema_window}'))\n\n# Update layout\nfig.update_layout(\n    title='Interactive Price Chart with Technical Indicators',\n    yaxis_title='Price ($)',\n    xaxis_title='Date',\n    template='plotly_dark',\n    height=700,\n    xaxis_rangeslider_visible=True\n)\n\nst.plotly_chart(fig, use_container_width=True)","outputs":[],"execution_count":null,"metadata":{}}],"metadata":{"colab":{"from_bard":true},"kernelspec":{"display_name":"Python 3","name":"python3"}},"nbformat":4,"nbformat_minor":0}
+import streamlit as st
+import pandas as pd
+import plotly.graph_objects as go
+
+st.set_page_config(layout="wide")
+
+if 'data' not in st.session_state:
+    st.error("Data not loaded. Please go back to the main app page.")
+    st.stop()
+
+data = st.session_state.data.copy() # Use a copy to add indicators
+
+# --- PAGE TITLE & HEADER ---
+st.title("Advanced Charting")
+st.markdown("Analyze SIMULATED_STOCK with technical indicators.")
+
+# --- SIDEBAR FOR INDICATOR CONTROLS ---
+st.sidebar.header("Indicator Settings")
+show_sma = st.sidebar.checkbox("Show Simple Moving Average (SMA)", True)
+if show_sma:
+    sma_short_window = st.sidebar.slider("SMA Short Window", 5, 50, 10)
+    sma_long_window = st.sidebar.slider("SMA Long Window", 10, 100, 30)
+
+show_ema = st.sidebar.checkbox("Show Exponential Moving Average (EMA)")
+if show_ema:
+    ema_window = st.sidebar.slider("EMA Window", 5, 50, 12)
+
+# --- CALCULATE INDICATORS ---
+if show_sma:
+    data[f'SMA_{sma_short_window}'] = data['Close'].rolling(window=sma_short_window).mean()
+    data[f'SMA_{sma_long_window}'] = data['Close'].rolling(window=sma_long_window).mean()
+
+if show_ema:
+    data[f'EMA_{ema_window}'] = data['Close'].ewm(span=ema_window, adjust=False).mean()
+
+
+# --- PLOT THE CHART ---
+fig = go.Figure()
+
+# Add Candlestick trace
+fig.add_trace(go.Candlestick(x=data.index,
+                             open=data['Open'],
+                             high=data['High'],
+                             low=data['Low'],
+                             close=data['Close'],
+                             name="Price"))
+
+# Add SMA traces if selected
+if show_sma:
+    fig.add_trace(go.Scatter(x=data.index, y=data[f'SMA_{sma_short_window}'],
+                             line=dict(color='orange', width=1), name=f'SMA {sma_short_window}'))
+    fig.add_trace(go.Scatter(x=data.index, y=data[f'SMA_{sma_long_window}'],
+                             line=dict(color='cyan', width=1), name=f'SMA {sma_long_window}'))
+
+# Add EMA trace if selected
+if show_ema:
+    fig.add_trace(go.Scatter(x=data.index, y=data[f'EMA_{ema_window}'],
+                             line=dict(color='yellow', width=1), name=f'EMA {ema_window}'))
+
+# Update layout
+fig.update_layout(
+    title='Interactive Price Chart with Technical Indicators',
+    yaxis_title='Price ($)',
+    xaxis_title='Date',
+    template='plotly_dark',
+    height=700,
+    xaxis_rangeslider_visible=True
+)
+
+st.plotly_chart(fig, use_container_width=True)
